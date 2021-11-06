@@ -3,8 +3,8 @@ import {ReactiveVar} from 'meteor/reactive-var';
 
 import './main.html';
 
-const GAME_WIDTH = 1200;
-const GAME_HEIGHT = 800;
+const GAME_WIDTH = 1600;
+const GAME_HEIGHT = 1200;
 
 Template.gameCanvas.onCreated(function()
 {
@@ -21,6 +21,9 @@ Template.gameCanvas.onRendered(function()
 	{
 		canvas = canvas[0];
 	}
+
+	self.canvas = canvas;
+	self.ctx = self.canvas.getContext("2d");
 
 	canvas.width = GAME_WIDTH;
 	canvas.height = GAME_HEIGHT;
@@ -52,6 +55,15 @@ Template.gameCanvas.onRendered(function()
 	});
 
 	self.resizeCanvas();
+
+	self.tick = function()
+	{
+		self.ctx.clearRect(0, 0, self.width.get(), self.height.get());
+		self.ctx.fillStyle = "#faa";
+		self.ctx.fillRect(0, 0, self.width.get(), self.height.get());
+		window.requestAnimationFrame(self.tick);
+	}
+	window.requestAnimationFrame(self.tick);
 });
 
 Template.gameCanvas.helpers(
@@ -70,5 +82,6 @@ Template.gameCanvas.helpers(
 		},
 	});
 
-Template.gameCanvas.events(
-	{});
+Template.gameCanvas.events({
+
+});
