@@ -1,7 +1,14 @@
 <head>
-  <title>bugz_and_gunz</title>
+    <title>bugz_and_gunz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
-	<canvas></canvas>
+    {{> gameCanvas}}
 </body>
+
+<template name="gameCanvas">
+    <canvas class="gameCanvas" width="{{width}}" height="{{height}}">
+        Your browser does not support HTML5 Canvas... Sorry?
+    </canvas>
+</template>
