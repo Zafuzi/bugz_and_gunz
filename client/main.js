@@ -11,6 +11,7 @@ Template.gameCanvas.onCreated(function()
 	this.paused = new ReactiveVar(true);
 	this.width = new ReactiveVar(GAME_WIDTH);
 	this.height = new ReactiveVar(GAME_HEIGHT);
+	this.fps = new ReactiveVar(0);
 });
 
 Template.gameCanvas.onRendered(function()
@@ -56,14 +57,50 @@ Template.gameCanvas.onRendered(function()
 
 	self.resizeCanvas();
 
+	self.times = [];
+
+	self.loop = function()
+	{
+		const now = performance.now();
+		while (self.times.length > 0 && self.times[0] <= now - 1000) {
+			self.times.shift();
+		}
+		self.times.push(now);
+		self.fps.set(self.times.length);
+
+		self.tick();
+		self.draw();
+
+		window.requestAnimationFrame(self.loop);
+	}
+
+	let x = 0;
+	let y = 0;
+	let xdir = 1;
+	let ydir = 1;
 	self.tick = function()
 	{
-		self.ctx.clearRect(0, 0, self.width.get(), self.height.get());
-		self.ctx.fillStyle = "#faa";
-		self.ctx.fillRect(0, 0, self.width.get(), self.height.get());
-		window.requestAnimationFrame(self.tick);
+		x += xdir * 5;
+		y += ydir * 5;
+
+		if(x < 0 || x >= self.width.get() - 100)
+		{
+			xdir *= -1;
+		}
+		if(y < 0 || y >= self.height.get() - 100)
+		{
+			ydir *= -1;
+		}
 	}
-	window.requestAnimationFrame(self.tick);
+
+	self.ctx.fillStyle = "#faa";
+	self.draw = function()
+	{
+		self.ctx.clearRect(0, 0, self.width.get(), self.height.get());
+		self.ctx.fillRect(x, y, 100, 100);
+	}
+
+	window.requestAnimationFrame(self.loop);
 });
 
 Template.gameCanvas.helpers(
@@ -80,6 +117,10 @@ Template.gameCanvas.helpers(
 		{
 			return Template.instance().paused.get();
 		},
+		fps: function()
+		{
+			return Template.instance().fps.get();
+		}
 	});
 
 Template.gameCanvas.events({
