@@ -1,107 +1,146 @@
 import {Template} from 'meteor/templating';
 import {ReactiveVar} from 'meteor/reactive-var';
-import {Player} from "./components/player/player";
-import {keys_down_string} from "./a_lib/input";
+import {Player} from "./components/player";
+import {Shield} from "./components/shield";
+import {keys_down_string, mouseMoveListener, rawY, rawX} from "./a_lib/input";
 
 import './main.html';
 
 const GAME_WIDTH = 1600;
-const GAME_HEIGHT = 1200;
+const GAME_HEIGHT = 900;
 
-Template.gameCanvas.onCreated(function () {
-    let self = this;
-    self.paused = new ReactiveVar(true);
-    self.width = new ReactiveVar(GAME_WIDTH);
-    self.height = new ReactiveVar(GAME_HEIGHT);
-    self.fps = new ReactiveVar(0);
-    self.keyString = new ReactiveVar("");
-});
+let running_loop = null;
 
-Template.gameCanvas.onRendered(function () {
-    let self = this;
-    let canvas = document.querySelectorAll(".gameCanvas");
-    if (canvas.length) {
-        canvas = canvas[0];
-    }
+let game = {
+    paused: new ReactiveVar(false),
+    width: new ReactiveVar(GAME_WIDTH),
+    height: new ReactiveVar(GAME_HEIGHT),
+    fps: new ReactiveVar(0),
+    times: [],
+    keyString: new ReactiveVar(""),
+    mx: new ReactiveVar(0),
+    my: new ReactiveVar(0),
+    canvas: null,
+    scale: new ReactiveVar(1),
+    ctx: null,
+    loop: function ()
+    {
+        const now = performance.now();
+        while (game.times.length > 0 && game.times[0] <= now - 1000) {
+            game.times.shift();
+        }
+        game.times.push(now);
+        game.fps.set(game.times.length);
 
-    self.canvas = canvas;
-    self.ctx = self.canvas.getContext("2d");
+        // TODO verify this is right
+        if(game.canvas)
+        {
+            let pos = game.canvas.getBoundingClientRect();
+            game.mx.set(Math.floor((rawX - pos.left) / game.scale.get()));
+            game.my.set(Math.floor((rawY - pos.top) / game.scale.get()));
+        }
 
-    canvas.width = GAME_WIDTH;
-    canvas.height = GAME_HEIGHT;
+        game.tick();
+        game.draw();
 
-    self.resizeCanvas = function () {
+        running_loop = requestAnimationFrame(game.loop);
+    },
+    tick: function ()
+    {
+        if(!game.canvas) return;
+        if(game.paused.get()) return;
+        game.keyString.set(keys_down_string());
+        Player.tick(game);
+        Shield.tick(game);
+    },
+    draw: function ()
+    {
+        if(!game.canvas) return;
+        if(game.paused.get()) return;
+        game.ctx.clearRect(0, 0, game.width.get(), game.height.get());
+        Player.draw(game);
+        Shield.draw(game);
+    },
+    resizeCanvas: function()
+    {
+        if(!game.canvas) return;
         let canvasPadding = 0;
-        let style = canvas.getAttribute('style') || '';
-        let scale = Math.min((window.innerWidth - canvasPadding) / canvas.width, (window.innerHeight - canvasPadding) / canvas.height);
+        let style = game.canvas.getAttribute('style') || '';
+        game.scale.set(Math.min((window.innerWidth - canvasPadding) / game.canvas.width, (window.innerHeight - canvasPadding) / game.canvas.height));
         let translate = `translate3d(-50%, -50%, 0)`;
-        canvas.setAttribute('style',
+        game.canvas.setAttribute('style',
             style + `
 			-ms-transform-origin: center center;
 			-webkit-transform-origin: center center;
 			-moz-transform-origin: center center;
 			-o-transform-origin: center center;
 			transform-origin: center center;
-			-ms-transform: ${translate} scale(${scale});
-			-webkit-transform: ${translate} scale3d(${scale}, 1);
-			-moz-transform: ${translate} scale(${scale});
-			-o-transform: ${translate} scale(${scale});
-			transform: ${translate} scale(${scale});
+			-ms-transform: ${translate} scale(${game.scale.get()});
+			-webkit-transform: ${translate} scale3d(${game.scale.get()}, 1);
+			-moz-transform: ${translate} scale(${game.scale.get()});
+			-o-transform: ${translate} scale(${game.scale.get()});
+			transform: ${translate} scale(${game.scale.get()});
 		`);
-    };
+    }
+}
 
-    window.addEventListener("resize", function () {
-        self.resizeCanvas();
-    });
+document.addEventListener("DOMContentLoaded", function () {
+});
 
-    self.resizeCanvas();
+window.addEventListener("resize", function () {
+    game.resizeCanvas();
+});
 
-    self.times = [];
+Template.gameCanvas.onCreated(function () {
+});
 
-    self.loop = function () {
-        const now = performance.now();
-        while (self.times.length > 0 && self.times[0] <= now - 1000) {
-            self.times.shift();
-        }
-        self.times.push(now);
-        self.fps.set(self.times.length);
+Template.gameCanvas.onRendered(function () {
+});
 
-        self.tick();
-        self.draw();
+Template.gameCanvas.onRendered(function () {
+    let canvas = document.querySelectorAll(".gameCanvas");
 
-        window.requestAnimationFrame(self.loop);
+    if (canvas.length) {
+        game.canvas = canvas[0];
+        game.ctx = game.canvas.getContext("2d");
+        game.canvas.width = GAME_WIDTH;
+        game.canvas.height = GAME_HEIGHT;
+    }
+    else
+    {
+        return;
     }
 
-    self.tick = function () {
-        self.keyString.set(keys_down_string());
-        Player.tick(self);
+    game.canvas.addEventListener("mousemove", mouseMoveListener);
+    game.resizeCanvas();
+    if (module.hot) {
+        module.hot.dispose(function()
+        {
+            cancelAnimationFrame(running_loop)
+        });
     }
-
-    self.draw = function () {
-        self.ctx.clearRect(0, 0, self.width.get(), self.height.get());
-        Player.draw(self);
-    }
-
-    window.requestAnimationFrame(self.loop);
+    running_loop = requestAnimationFrame(game.loop);
 });
 
 Template.gameCanvas.helpers(
     {
         width: function () {
-            return Template.instance().width.get();
+            return game.width.get();
         },
         height: function () {
-            return Template.instance().height.get();
+            return game.height.get();
         },
         paused: function () {
-            return Template.instance().paused.get();
+            return game.paused.get();
         },
         fps: function () {
-            return Template.instance().fps.get();
+            return game.fps.get();
         },
-        keys: function()
-        {
-            return Template.instance().keyString.get();
+        keys: function () {
+            return game.keyString.get();
+        },
+        mouse: function () {
+            return `${game.mx.get()}, ${game.my.get()}`;
         }
     });
 

@@ -1,4 +1,4 @@
-import {areKeysDown} from "../../a_lib/input";
+import {areKeysDown} from "../a_lib/input";
 
 export const Player = {
     x: 10, y: 10,
@@ -41,8 +41,8 @@ export const Player = {
             self.y += 5;
         }
 
-        if (self.x > game.width.get() - self.w) {
-            self.x  = game.width.get() - self.w;
+        if (self.x > 400 - self.w) {
+            self.x  = 400 - self.w;
         }
 
         if(self.x < 0)

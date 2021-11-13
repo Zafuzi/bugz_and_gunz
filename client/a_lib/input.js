@@ -1,5 +1,7 @@
 
 export var keys_down = [];
+export var rawX = 0;
+export var rawY = 0;
 
 export function keys_down_string()
 {
@@ -70,3 +72,9 @@ document.addEventListener("keyup", keyUpListener);
 document.addEventListener("blur", focusOutListener);
 document.addEventListener("focus", focusOutListener);
 document.addEventListener("contextmenu", contextMenuListener);
+
+export function mouseMoveListener(event)
+{
+    rawX = event.clientX;
+    rawY = event.clientY;
+}
