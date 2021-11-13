@@ -1,6 +1,6 @@
 import {Template} from 'meteor/templating';
 import {ReactiveVar} from 'meteor/reactive-var';
-import {Player} from "./components/player";
+import {Player, bullets} from "./components/player";
 import {Shield} from "./components/shield";
 import {keys_down_string, mouseMoveListener, rawY, rawX} from "./a_lib/input";
 
@@ -23,6 +23,7 @@ let game = {
     canvas: null,
     scale: new ReactiveVar(1),
     ctx: null,
+    bullets: new ReactiveVar(0),
     loop: function ()
     {
         const now = performance.now();
@@ -50,16 +51,36 @@ let game = {
         if(!game.canvas) return;
         if(game.paused.get()) return;
         game.keyString.set(keys_down_string());
-        Player.tick(game);
         Shield.tick(game);
+
+        game.bullets.set(bullets.length);
+        for(let i = 0;  i < bullets.length; i++)
+        {
+            let bullet = bullets[i];
+            if(bullet.kill)
+            {
+               bullets.splice(i, 1);
+            }
+            else
+            {
+                bullet.tick(game);
+            }
+        }
+        Player.tick(game);
     },
     draw: function ()
     {
         if(!game.canvas) return;
         if(game.paused.get()) return;
         game.ctx.clearRect(0, 0, game.width.get(), game.height.get());
-        Player.draw(game);
         Shield.draw(game);
+
+        game.ctx.strokeStyle = "red";
+        for(let bullet of bullets)
+        {
+            bullet.draw(game);
+        }
+        Player.draw(game);
     },
     resizeCanvas: function()
     {
@@ -123,25 +144,29 @@ Template.gameCanvas.onRendered(function () {
 });
 
 Template.gameCanvas.helpers(
+{
+    width: function () {
+        return game.width.get();
+    },
+    height: function () {
+        return game.height.get();
+    },
+    paused: function () {
+        return game.paused.get();
+    },
+    fps: function () {
+        return game.fps.get();
+    },
+    keys: function () {
+        return game.keyString.get();
+    },
+    mouse: function () {
+        return `${game.mx.get()}, ${game.my.get()}`;
+    },
+    bullets: function()
     {
-        width: function () {
-            return game.width.get();
-        },
-        height: function () {
-            return game.height.get();
-        },
-        paused: function () {
-            return game.paused.get();
-        },
-        fps: function () {
-            return game.fps.get();
-        },
-        keys: function () {
-            return game.keyString.get();
-        },
-        mouse: function () {
-            return `${game.mx.get()}, ${game.my.get()}`;
-        }
-    });
+        return game.bullets.get();
+    }
+});
 
 Template.gameCanvas.events({});

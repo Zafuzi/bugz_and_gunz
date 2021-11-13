@@ -29,7 +29,12 @@ export function areKeysDown(keysArr)
 
 function keyDownListener(event)
 {
-    let key = event.key.toLowerCase().trim();
+    let key = event.key;
+    if(event.key === " ")
+    {
+        key = "space";
+    }
+    key = key.toLowerCase().trim();
     if(!key)
     {
         return;
@@ -43,7 +48,12 @@ function keyDownListener(event)
 
 function keyUpListener(event)
 {
-    let key = event.key.toLowerCase().trim();
+    let key = event.key;
+    if(event.key === " ")
+    {
+        key = "space";
+    }
+    key = key.toLowerCase().trim();
     if(!key)
     {
         return;
@@ -67,11 +77,22 @@ function contextMenuListener(event)
     event.preventDefault();
 }
 
+function mouseDownListener() {
+    keyDownListener({key: "mousedown"});
+}
+
+function mouseUpListener() {
+    keyUpListener({key: "mousedown"});
+}
+
+
 document.addEventListener("keydown", keyDownListener);
 document.addEventListener("keyup", keyUpListener);
 document.addEventListener("blur", focusOutListener);
 document.addEventListener("focus", focusOutListener);
 document.addEventListener("contextmenu", contextMenuListener);
+document.addEventListener("mousedown", mouseDownListener);
+document.addEventListener("mouseup", mouseUpListener);
 
 export function mouseMoveListener(event)
 {

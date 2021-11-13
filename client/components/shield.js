@@ -11,7 +11,7 @@ export const Shield = {
     {
         let self = this;
         if(!game) return;
-        game.ctx.fillStyle = "blue";
+        game.ctx.fillStyle = "rgba(33, 80, 150, 0.5)";
         game.ctx.fillRect(self.x, self.y, self.w, self.h);
     }
 }
