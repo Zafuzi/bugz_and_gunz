@@ -21,12 +21,19 @@ canvas {
 
 
 .fpsCounter {
-  display: block;
+  display: inline-flex;
   position: absolute;
+  width: 100%;
   font-size: 12pt;
-  top: 10px;
-  left: 10px;
+  top: 0;
+  left: 0;
   color: #fff;
-  background-color: #000;
-  padding: 12px;
+  background-color: rgba(116, 9, 9, 0.47);
+  padding: 4px;
+
+  z-index: 99;
+
+  p {
+    padding: 4px;
+  }
 }

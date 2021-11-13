@@ -9,6 +9,18 @@ export const Player = {
         let self = this;
         if (!self.alive) return;
 
+        self.input(game);
+    },
+    draw: function (game) {
+        let self = this;
+        if (!self.alive) return;
+        game.ctx.fillStyle = "#faa";
+        game.ctx.fillRect(self.x, self.y, self.w, self.h);
+    },
+    alive: true,
+    input: function(game)
+    {
+        let self = this;
         if(areKeysDown(["d", "l", "arrowright"]))
         {
             self.x += 5;
@@ -29,24 +41,23 @@ export const Player = {
             self.y += 5;
         }
 
-        /*
-        self.x += self.xdir * 5;
-        self.y += self.ydir * 5;
-         */
-
-        if (self.x >= game.width.get() - self.w || self.x <= 0) {
-            self.xdir *= -1;
+        if (self.x > game.width.get() - self.w) {
+            self.x  = game.width.get() - self.w;
         }
 
-        if (self.y >= game.height.get() - self.h || self.y <= 0) {
-            self.ydir *= -1;
+        if(self.x < 0)
+        {
+            self.x = 0;
         }
-    },
-    draw: function (game) {
-        let self = this;
-        if (!self.alive) return;
-        game.ctx.fillStyle = "#faa";
-        game.ctx.fillRect(self.x, self.y, self.w, self.h);
-    },
-    alive: true
+
+        if (self.y > game.height.get() - self.h) {
+            self.y  = game.height.get() - self.h;
+        }
+
+        if(self.y < 0)
+        {
+            self.y = 0;
+        }
+
+    }
 }
