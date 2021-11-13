@@ -55,5 +55,18 @@ function keyUpListener(event)
     }
 }
 
+function focusOutListener()
+{
+    keys_down = [];
+}
+
+function contextMenuListener(event)
+{
+    event.preventDefault();
+}
+
 document.addEventListener("keydown", keyDownListener);
 document.addEventListener("keyup", keyUpListener);
+document.addEventListener("blur", focusOutListener);
+document.addEventListener("focus", focusOutListener);
+document.addEventListener("contextmenu", contextMenuListener);
